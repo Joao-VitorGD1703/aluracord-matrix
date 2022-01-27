@@ -2,13 +2,32 @@
 import { Box, Text, TextField, Image, Button, Icon } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_ANON_kEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzI4NzI3OSwiZXhwIjoxOTU4ODYzMjc5fQ.Co6qNUboSoAPL08DDBIsi6oeokMMfHoYnfGkkTL26Ao';
+const SUPABASE_URL = 'https://yjosllrksbabbvrcxpqh.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_kEY);
+
 
 export default function ChatPage() {
-    /*return (
-        <div>Página do Chat</div>
-    )*/
+    
+
     const [mensagem, setMensagem] = React.useState('');
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+
+    React.useEffect(() => {
+        
+     supabaseClient
+        .from('mensagens')
+        .select('*')
+        .order('id', {ascending: false})
+        .then(({data}) =>{
+            console.log('Dados da consulta:', data);
+            setListaDeMensagens(data);
+    
+        });
+    }, []);
+   
 
     /*
     // Usuário
@@ -23,18 +42,24 @@ export default function ChatPage() {
     */
     function handleNovaMensagem(novaMensagem) {
         const mensagem = {
-            id: listaDeMensagens.length + 1,
+           // id: listaDeMensagens.length + 1,
             de: 'Joao-VitorGD1703',
             texto: novaMensagem,
         };
+        supabaseClient
+          .from('mensagens')
+          .insert([mensagem])
+          .then(({data}) => {
+              console.log('Criando Mensagem: ', data);
+              setListaDeMensagens([
+                data[0],
+                ...listaDeMensagens,
+           ]);
 
-        setListaDeMensagens([
-             mensagem,
-             ...listaDeMensagens,
-        ]);
+          });
         setMensagem('');
     }
-    function handleDeleteMessage(event){
+    /*function handleDeleteMessage(event){
         const mensagemId = number(event.target.dataset.id)
         const listaDeMensagensFiltrada = listaDeMensagens.filter(
             listaDeMensagensFiltrada =>{
@@ -43,7 +68,9 @@ export default function ChatPage() {
 
         )
         setListaDeMensagens(listaDeMensagensFiltrada)
-    }
+        function 
+    }*/
+    
 
     return (
         <Box
@@ -84,8 +111,7 @@ export default function ChatPage() {
                     }}
                 >
                     <MessageList 
-                    mensagens={listaDeMensagens}
-                    handleDeleteMessage={handleDeleteMessage} />
+                    mensagens={listaDeMensagens} />
                     {/* {listaDeMensagens.map((mensagemAtual) => {
                         return (
                             <li key={mensagemAtual.id}>
@@ -125,16 +151,25 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[2000],
                             }}
                         />
-                        <Icon
-                        label= 'icon Component'
-                        name='FaRegPaperPlane'
-                        size= '35px'
-                        styleSheet={{
-                            color: appConfig.theme.colors.neutrals[1000],
-                            height: '16px',
+                        {/*<button
+                        type='submit'
+                        label= 'enviar'
+                        buttonColors={{
+                            contrastColor: appConfig.theme.colors.neutrals['0000'],
+                            mainColor: appConfig.theme.colors.primary[500],
+                            mainColorLight: appConfig.theme.colors.primary[400],
+                            mainColorStrong: appConfig.theme.colors.primary[600],
                         }}
-                        
-                        />
+                        styleSheet={{
+                            hover: {
+                                backgroundColor: 'green',
+                            }
+                        }}
+                        onClick={e => {
+                            envioMensagem(e)
+                            suportNovasMensagens(mensagem)
+                        }}
+                        />*/}
                     </Box>
                 </Box>
             </Box>
@@ -161,7 +196,6 @@ function Header() {
 }
 
 function MessageList(props) {
-    const handleDeleteMessage = props.handleDeleteMessage
     
     return (
         <Box
@@ -233,26 +267,7 @@ function MessageList(props) {
                             >
                                 {(new Date().toLocaleDateString())}
                         </Text>
-                        <text
-                        onClick={handleDeleteMessage}
-                        styleSheet={{
-                            fontSize: '10px',
-                            fontWeight: 'auto',
-                            marginLeft: 'auto',
-                            color: appConfig.theme.colors.neutrals['2000'],
-                            background: appConfig.theme.colors.neutrals['5000'],
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '5px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                        }}
-                        tag="span"
-                        data-id={mensagem.id}
-                        />
-                    
+
                         </Box>
                         {mensagem.texto}
                     </Text>
